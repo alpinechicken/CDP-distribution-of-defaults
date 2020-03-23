@@ -1,0 +1,319 @@
+\documentclass[12pt]{article}
+
+\usepackage{amssymb,amsmath,amsfonts,bbm,eurosym,geometry,ulem,graphicx,caption,color,setspace,sectsty,comment,footmisc,caption,natbib,pdflscape,subfigure,array,hyperref, booktabs, tabularx}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{babel}
+\usepackage[font=small,labelfont={bf,sf},tableposition=top]{caption}
+
+\normalem
+
+\onehalfspacing
+\newtheorem{theorem}{Theorem}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{proposition}{Proposition}
+\newenvironment{proof}[1][Proof]{\noindent\textbf{#1.} }{\ \rule{0.5em}{0.5em}}
+
+\newtheorem{hyp}{Hypothesis}
+\newtheorem{subhyp}{Hypothesis}[hyp]
+\renewcommand{\thesubhyp}{\thehyp\alph{subhyp}}
+
+\DeclareMathOperator\erfc{erfc}
+
+\newcommand{\red}[1]{{\color{red} #1}}
+\newcommand{\blue}[1]{{\color{blue} #1}}
+
+\newcolumntype{L}[1]{>{\raggedright\let\newline\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{C}[1]{>{\centering\let\newline\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{R}[1]{>{\raggedleft\let\newline\\arraybackslash\hspace{0pt}}m{#1}}
+
+\geometry{left=1.0in,right=1.0in,top=1.0in,bottom=1.0in}
+
+\begin{document}
+
+\begin{titlepage}
+\title{The distribution of defaults on margin loans}
+\author{Joseph Clark\thanks{RMIT Blockchain Innovation Hub. joecmail@gmail.com} }
+\date{\today}
+\maketitle
+\begin{abstract}
+\noindent We define a class of margin loans and derive the distribution of defaults. The default risk from an individual loan can be priced as a series of forward starting options with a knockout. Under simple price dynamics this has an explicit solution.  
+
+%\vspace{0in}\\
+%\noindent\textbf{Keywords:} key1, key2, key3\\
+%\vspace{0in}\\
+%\noindent\textbf{JEL Codes:} key1, key2, key3\\
+
+\bigskip
+\end{abstract}
+\setcounter{page}{0}
+\thispagestyle{empty}
+\end{titlepage}
+\pagebreak \newpage
+
+
+
+
+\doublespacing
+
+
+\section{Introduction} \label{sec:introduction}
+
+A margin loan is a portfolio of collateral assets maintained above some (possibly changing) value. If the liquidation value of the collateral assets falls below this value the position is liquidated. If it falls so far that the liquidation value does not cover the loan, the position becomes insolvent. Here we are interested in the difference between the liquidation value of the collateral and the value of the loan given insolvency.
+
+The structure of the default value in each period is a put option with a strike at the value of the loan. The whole arrangement is a series of forward starting put options expiring after each consecutive observation with a knock-out barrier at the variation margin. If the underlying price dynamics have an analytical solution this does too. We derive a solution for geometric Bronwnian motion in appendix A.
+
+Practically, this means that a margin loan provider can price and hedge the default risk of a margin loan with options on the loan asset's value relative to the collateral asset. The arbitrage-free value of the interest rate is the value of this hedge.
+
+\section{Preliminaries}
+
+For the most part we follow the notation of \cite{ang20} who examine constant product markets such as Uniswap.
+
+\textbf{Definition 1: Margin position}
+
+%[Add collateral asset vs liability value:
+%- Special case where one collateral asset vs loan asset (normal CDP, stablecoin mint)
+%- More general case where value of pool is dependent on linear assets (futures margin), or maximum loss (e.g. for spreads)
+%]
+
+The state of a margin position is a tuple $(t, m^r(t), M_I, M_V, R_\beta, R_\alpha, D_T, T)$. The observed reference price at time $t$ is $m^r(t)$ for units of $\beta$ per unit of $\alpha$, $M_I$ and $M_V$ are the initial and variation margin, $R_\beta, R_\alpha$ are the reserves held in the margin position, and $D_T$ is discount rate for the margin position maturing at $T$. Note that if $R_\alpha<0$ the margin position has minted these units.
+
+At time $t$ a deposit $\Delta_\beta$  will generate a loan 
+
+\begin{equation} \label{Delta_alpha}
+\Delta_\alpha = \frac{D_T \Delta_\beta}{m^r(t) M_I }
+\end{equation}
+
+
+Reserves are updated according to $R_\beta \mapsto R_\beta + \Delta_\beta$, $R_\alpha \mapsto R_\alpha - \Delta_\alpha$. 
+
+At any subsequent time before $T$ if the liquidation value of the collateral $R_\beta/m^r(t)$ falls below the collateral requirement $M_V R_\alpha$, the position is liquidated into units of $\alpha$, which are retained up to $R_\alpha/D_T$ and the remainder released to the depositor.   
+
+\textbf{Definition 2: Spot market}
+
+A spot market is a mechanism which exchanges $\Delta_\alpha$ units of $\alpha$ for $m^p(t)\Delta_\beta$ units of $\beta$ at time $t$. An infinitely elastic spot market is one where $m^p(t)$ does is not depend on $\Delta_\beta$
+
+We consider a market which updates according to 
+
+\[ m(t+1) = m(t)\exp( \sigma X + \mu) \]
+
+Where $X \sim N(0,1)), \sigma \geq 0$, and  $\mu \in \mathbf{R}$
+
+\section{The distribution of collateral defaults}
+
+We are interested in the distribution of defaults on the margin loan given some spot market process. A margin event occurs if the liquidation value of the collateral falls below the variation margin:
+
+\begin{equation*}
+\label{IM}
+    I_M(t) = \mathbbm{1} \left( L(t) \equiv \frac{R_\beta}{m(t)} < \frac{R_\alpha}{D_T} M_V \equiv V(t) \right)
+\end{equation*}
+
+Since a loan can only default once we need an indicator for whether the loan has value has been below the variation margin in a previous period
+
+\begin{equation*} \label{IL}
+    I_L(t) = 1-\prod_{\tau=1}^{t-1} \left(1-I_M(\tau) \right)
+\end{equation*}
+
+A default event occurs if the liquidation value of the collateral is below the value of the loan
+
+\begin{equation*} \label{ID}
+    I_D(t) = \mathbbm{1} \left( L(t) \equiv \frac{R_\beta}{m(t)} < \frac{R_\alpha}{D_T}  \equiv C_\alpha(t)\right)
+\end{equation*}
+
+The value of a default is then
+
+\begin{equation}
+ default(t) =   I_D(t) ( R_\alpha / D_T - L(t))
+\end{equation}
+
+
+%[Figure for L(t) with variation and default lines.]
+
+If the price process has an explicit solution this does too. Appendix A derives an expression for expected defaults under geometric Brownian motion.
+
+
+\section{Replication}
+
+The arrangement between the borrower and the lender can be represented as a put option between each observation period\footnote{That is, between periods where the margin loan has the opportunity to to liquidate collateral.}. From the lender's perspective the arrangement is a short put with a strike equal to the value liability of the loan $R_\alpha/D_T$. For any liquidation value of the collateral below this, the lender loses one unit of $\alpha$ per unit of deficit. In the case where it is not possible for the lender to repay the loan early this is a sequence of forward staring options with strikes at $C_\alpha(t)$ and a knockout barrier at the variance margin $V(t)$. The total premium for this option is the discount rate expressed as units of $\alpha$: $(1-D_T) R_\alpha$.
+
+
+%\subsection{Replication of pooled insurance}
+
+%An insurance pool guaranteeing defaults from a collection of loans can also be seen as a basket option on these cliques. 
+
+
+\section{Simulation}
+
+We construct a simulation of a margin loan pool that releases one loan maturing after $T$ periods. For each period after the inception of the loan we construct the default and margin call indicators $I_D$ and $I_M$. Without losing much generality assume $D_T, R_\beta = 1$.
+
+We start by simulating a realization of the price of one unit of loan $\alpha$ in units of the collateral $\beta$
+
+\[\left(m^{(s)}(\tau)\right)_{\tau=1}^{T}\]
+
+In the first period $\frac{1}{m^{(s)}(t) M_I}$ units of $\alpha$ are lent (from \ref{Delta_alpha}). For $t=1$ to $T$ calculate 
+
+     \[ I_M(t) = \mathbbm{1}\left( \frac{1}{m^{(s)}(t)}< R_\alpha M_V \right) \]
+     \[ I_L(t) = 1-\prod_{\tau=1}^{t-1} \left(1-I_M(\tau) \right)\]
+     \[ I_D(t) = \mathbbm{1} \left( \frac{1}{m^{(s)}(t)} < R_\alpha \right) \]
+
+The average amount of defaults as a fraction of loaned value across simulations is
+
+\begin{equation} \label{EDefaultSim}
+     E\left(\sum_{\tau=1}^T default(t)\right) = \frac{\sum_{s=1}^S \sum_{\tau=t}^{T} \frac{1}{R_\alpha}  \left(R_\alpha - \frac{1}{m^{(s)}(\tau)} \right) I_D(t) (1-I_L(t))}{S } 
+\end{equation}
+
+
+
+% Constructor: default_simulation.py
+
+   \begin{table}[!ht]
+     \caption{Annual default cost: $M_I$ = 1.5, $M_V$ = 1.2, Observation period each 1 minute }\label{tab:defaultCost1}
+     \centering
+     \begin{tabularx}{\linewidth}{Xcccc}\toprule
+       $\sigma$ (annualized) & One day loan  & Seven day loan & On month loan\\ \midrule
+       
+       3000\% & 0.00\% & 0.00\% & 0.00\%   \\
+       3500\% & 0.01\% & 0.00\% & 0.00\%   \\
+       4000\% & 0.05\% & 0.01\% & 0.00\%   \\ 
+       4500\% & 0.30\% & 0.05\% & 0.01\%   \\
+       5000\% & 1.47\% & 0.13\% & 0.02\%   \\
+       5500\% & 3.36\% & 0.38\% & 0.12\%   \\ 
+       \addlinespace
+     \end{tabularx}
+
+   \end{table}
+
+
+   \begin{table}[!ht]
+     \caption{Annual default cost: $M_I$ = 1.5, $M_V$ = 1.15, Observation period each 1 minute}\label{tab:defaultCost2}
+     \centering
+     \begin{tabularx}{\linewidth}{Xcccc}\toprule
+       $\sigma$ (annualized) & One day loan  & Seven day loan & On month loan\\ \midrule
+       
+       3000\% & 0.21\% & 0.01\% & 0.00\%   \\
+       3500\% & 0.22\% & 0.04\% & 0.02\%   \\
+       4000\% & 0.84\% & 0.15\% & 0.03\%   \\ 
+       4500\% & 4.50\% & 0.53\% & 0.13\%   \\
+       5000\% & 8.89\% & 1.51\% & 0.25\%   \\
+       5500\% & 16.99\% & 1.94\% & 0.54\%   \\ 
+       \addlinespace
+     \end{tabularx}
+
+   \end{table}
+
+
+
+   
+\subsection{Discussion}
+
+Tables \ref{tab:defaultCost1} and \ref{tab:defaultCost2} are simulated annual default costs for three maturities of loans if the the market rate follows geometric Brownian motion with different levels of volatility. For instance, the annualised expected default rate for seven day loans given $5000\%$ annual volatility\footnote{To give a sense of proportion, this equates to a $5000\/ \sqrt{365*24*60} = 67\%$ standard deviation each minute } observed each minute is $0.42\%$. This means that a risk neutral insurance writer would require $0.47/52 = 0.01\%$ of the loan value to underwrite default risk for the week.  
+
+The average default cost is:
+
+\begin{itemize}
+\item Increasing in price volatility since jumps into default are more likely with higher volatility
+\item Decreasing in the maturity of the loan since longer maturity loans are likely to have hit the margin barrier earlier
+\item Decreasing in the variation margin (compare tables \ref{tab:defaultCost1} and \ref{tab:defaultCost2}) since default requires a jump from above the variation margin to below the loan value.
+\end{itemize}
+
+
+
+
+\singlespacing
+\setlength\bibsep{0pt}
+\bibliographystyle{my-style}
+\bibliography{Placeholder}
+
+
+
+\clearpage
+
+\onehalfspacing
+
+%\section*{Tables} \label{sec:tab}
+%\addcontentsline{toc}{section}{Tables}
+
+
+
+%\clearpage
+
+%\section*{Figures} \label{sec:fig}
+%\addcontentsline{toc}{section}{Figures}
+
+%\begin{figure}[hp]
+%  \centering
+%  \includegraphics[width=.6\textwidth]{../fig/placeholder.pdf}
+%  \caption{Placeholder}
+%  \label{fig:placeholder}
+%\end{figure}
+
+
+
+
+\clearpage
+
+\section*{Appendix A. An analytic result for expected defaults} \label{sec:appendixa}
+\addcontentsline{toc}{section}{Appendix A: }
+
+If the market price is Geometric Brownian Motion the expected value of defaults can be constructed straightforwardly. For a particular liquidation value $L(t) = \bar{L} > M_V R_\alpha$ the expected value of a default after $\Delta t$ is 
+
+\[ \int_0^{R_\alpha} (R_\alpha - L) f_L(L, \Delta t, \bar{L}) dL \]
+
+Assuming no drift the density after $\Delta t$ is
+
+\[ f_L(L, \Delta t, \bar{L})  = \frac{1}{\sqrt{2\pi}} \frac{1}{L \sigma \sqrt{\Delta t}} \exp \frac{-(\log(L/\bar{L}) + 0.5 \sigma^2 \Delta t)^2 }{2\sigma^2 \Delta t}\]
+
+Similarly, the density of the price at any point is
+
+\[ f_L(L,t, L(0)) = \frac{1}{\sqrt{2\pi}} \frac{1}{L \sigma \sqrt{t}} \exp \frac{-(\log(L/L(0)) + 0.5 \sigma^2 t)^2 }{2\sigma^2 t} \]
+
+Finally, we need to adjust for the probability that the position has already been liquidated at point $t$ given the current liquidation value. By symmetry this is twice the probability that the liquidation value will have increased by at least the difference between the current liquidation value and the variation margin (see \cite{Jac2010}). 
+
+\[ P(Liquidated | L = \bar{L}) = 2 P(L(t)> 2 \bar{L} - R_\alpha M_V) | L(0)=\bar{L}  ) = 2 N(d_2(\bar{L}, 2\bar{L} - R_\alpha M_V)) \]
+
+Using the Black-Scholes-Merton $d_2$ (see \cite{BS73}, \cite{Merton73})
+
+\[d_2(\bar{L}, 2\bar{L} - R_\alpha M_V,t) =  \frac{ \frac{\bar{L}}{2\bar{L} - R_\alpha M_V} - 0.5 \sigma^2 t}{\sigma \sqrt{t}} \]
+
+The total expected default is then
+
+\begin{equation} \label{EDefaultGBM}
+\int_0^T \left( \int_{R_\alpha M_V}^\infty \left( \int_0^{R_\alpha} (R_\alpha - L) f_L}(L, \Delta t, \bar{L}) dL \right) f(\bar{L},t,L(0)) (1-P(Liquidated | L = \bar{L}) ) d\bar{L}  \right) dt   
+\end{equation}
+
+Numerically integrating a discretized version of \ref{EDefaultGBM} over a distribution of $R_\alpha$ is often more convenient than simulating with \ref{EDefaultSim}.
+
+
+% Note: This is a standard barrier result using reflection and strong markov property but not it doesn't seem to work exactly in sims. What to do?
+% Jupyter notebook: MarginsWithPooledInsurance.ipynb
+
+
+
+% Extensions:
+% Other processes?
+% Attack where to manipulate price downwards so that the MP liquidates the collateral too cheaply.
+
+
+\begin{thebibliography}{}
+\bibitem{ang20} Angeris, Guillermo, Hsien-Tang Kao, Rei Chiang, Charlie Noyes, and Tarun Chitra  \textit{An analysis of Uniswap markets}, arXiv preprint arXiv:1911.03380, 2020.
+
+\bibitem{Zha18} Zhang, Yi, Xiaohong Chen, and Daejun Park (2018) \textit{Formal specification of constant product (xy=k) market maker model and implementation}. 2018.
+
+\bibitem{BS73} Black, Fischer, Scholes, Myron (1973). \textit{The Pricing of Options and Corporate Liabilities}. Journal of Political Economy. 81 (3): 637–654. 
+
+\bibitem{Jac2010} Jacobs, Kurt (2010). Stochastic Processes for Physicists. Cambridge University Press. pp. 57–59
+
+\bibitem{Merton73} Merton, Robert (1973). \textit{Theory of Rational Option Pricing}. Bell Journal of Economics and Management Science. 4 (1): 141–183.
+
+
+%@article{angeris2019analysis,
+%  title={An analysis of Uniswap markets},
+%  author={Angeris, Guillermo and Kao, Hsien-Tang and Chiang, Rei and Noyes, %Charlie and Chitra, Tarun},
+%  journal={arXiv preprint arXiv:1911.03380},
+%  year={2019}
+
+
+\end{thebibliography}
+
+\end{document}
